@@ -1573,6 +1573,17 @@ func (cfg *SlackReporter) DefaultAndValidate() error {
 	return nil
 }
 
+// RocketChatReporter represents the config for the RocketChat reporter. The channel can be overridden
+// on the job via the .reporter_config.rocketchat.channel property.
+type RocketChatReporter struct {
+	JobTypesToReport                 []prowapi.ProwJobType `json:"job_types_to_report,omitempty"`
+	prowapi.RocketChatReporterConfig `json:",inline"`
+}
+
+// RocketChatReporterConfig represents the config for the Slack reporter(s).
+// Use `org/repo`, `org` or `*` as key and an `RocketChatReporter` struct as value.
+type RocketChatReporterConfig map[string]RocketChatReporter
+
 // Load loads and parses the config at path.
 func Load(prowConfig, jobConfig string, supplementalProwConfigDirs []string, supplementalProwConfigsFileNameSuffix string, additionals ...func(*Config) error) (c *Config, err error) {
 	return loadWithYamlOpts(nil, prowConfig, jobConfig, supplementalProwConfigDirs, supplementalProwConfigsFileNameSuffix, additionals...)
