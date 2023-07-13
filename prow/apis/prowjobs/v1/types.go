@@ -422,6 +422,40 @@ type RocketChatReporterConfig struct {
 	Report *bool `json:"report,omitempty"`
 }
 
+// ApplyDefault is called by jobConfig.ApplyDefault(globalConfig)
+func (src *RocketChatReporterConfig) ApplyDefault(def *RocketChatReporterConfig) *RocketChatReporterConfig {
+	if src == nil && def == nil {
+		return nil
+	}
+	var merged RocketChatReporterConfig
+	if src != nil {
+		merged = *src.DeepCopy()
+	} else {
+		merged = *def.DeepCopy()
+	}
+	if src == nil || def == nil {
+		return &merged
+	}
+
+	if merged.Channel == "" {
+		merged.Channel = def.Channel
+	}
+	if merged.Host == "" {
+		merged.Host = def.Host
+	}
+	// Note: `job_states_to_report: []` also results in JobStatesToReport == nil
+	if merged.JobStatesToReport == nil {
+		merged.JobStatesToReport = def.JobStatesToReport
+	}
+	if merged.ReportTemplate == "" {
+		merged.ReportTemplate = def.ReportTemplate
+	}
+	if merged.Report == nil {
+		merged.Report = def.Report
+	}
+	return &merged
+}
+
 // Duration is a wrapper around time.Duration that parses times in either
 // 'integer number of nanoseconds' or 'duration string' formats and serializes
 // to 'duration string' format.

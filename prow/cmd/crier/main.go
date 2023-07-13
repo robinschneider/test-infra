@@ -35,12 +35,14 @@ import (
 	gerritreporter "k8s.io/test-infra/prow/crier/reporters/gerrit"
 	githubreporter "k8s.io/test-infra/prow/crier/reporters/github"
 	pubsubreporter "k8s.io/test-infra/prow/crier/reporters/pubsub"
+	rocketchatreporter "k8s.io/test-infra/prow/crier/reporters/rocketchat"
 	slackreporter "k8s.io/test-infra/prow/crier/reporters/slack"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
 	configflagutil "k8s.io/test-infra/prow/flagutil/config"
 	"k8s.io/test-infra/prow/interrupts"
 	"k8s.io/test-infra/prow/logrusutil"
 	"k8s.io/test-infra/prow/metrics"
+	rocketchatclient "k8s.io/test-infra/prow/rocketchat"
 	slackclient "k8s.io/test-infra/prow/slack"
 )
 
@@ -56,11 +58,14 @@ type options struct {
 	pubsubWorkers         int
 	githubWorkers         int
 	slackWorkers          int
+	rocketChatWorkers     int
 	blobStorageWorkers    int
 	k8sBlobStorageWorkers int
 
-	slackTokenFile            string
-	additionalSlackTokenFiles slackclient.HostsFlag
+	slackTokenFile                 string
+	rocketChatTokenFile            string
+	additionalSlackTokenFiles      slackclient.HostsFlag
+	additionalRocketChatTokenFiles rocketchatclient.HostsFlag
 
 	storage prowflagutil.StorageClientOptions
 
@@ -205,6 +210,33 @@ func main() {
 		slackReporter := slackreporter.New(slackConfig, o.dryrun, tokensMap)
 		if err := crier.New(mgr, slackReporter, o.slackWorkers, o.githubEnablement.EnablementChecker()); err != nil {
 			logrus.WithError(err).Fatal("failed to construct slack reporter controller")
+		}
+	}
+
+	if o.rocketChatWorkers > 0 {
+		if cfg().RocketChatReporterConfigs == nil {
+			logrus.Fatal("rocketchatreporter is enabled but has no config")
+		}
+		rocketChatConfig := func(refs *prowapi.Refs) config.RocketChatReporter {
+			return cfg().RocketChatReporterConfigs.GetRocketChatReporter(refs)
+		}
+		tokensMap := make(map[string]func() []byte)
+		if o.rocketChatTokenFile != "" {
+			tokensMap[rocketchatreporter.DefaultHostName] = secret.GetTokenGenerator(o.rocketChatTokenFile)
+			if err := secret.Add(o.rocketChatTokenFile); err != nil {
+				logrus.WithError(err).Fatal("could not read rocketchat token")
+			}
+		}
+		hasReporter = true
+		for host, additionalTokenFile := range o.additionalRocketChatTokenFiles {
+			tokensMap[host] = secret.GetTokenGenerator(additionalTokenFile)
+			if err := secret.Add(additionalTokenFile); err != nil {
+				logrus.WithError(err).Fatal("could not read rocketchat token")
+			}
+		}
+		rocketChatReporter := rocketchatreporter.New(rocketChatConfig, o.dryrun, tokensMap)
+		if err := crier.New(mgr, rocketChatReporter, o.rocketChatWorkers, o.githubEnablement.EnablementChecker()); err != nil {
+			logrus.WithError(err).Fatal("failed to construct rocketchat reporter controller")
 		}
 	}
 
