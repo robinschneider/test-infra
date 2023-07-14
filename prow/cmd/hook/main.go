@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"k8s.io/test-infra/prow/rocketchat"
 	"net/http"
 	"os"
 	"strconv"
@@ -71,8 +72,9 @@ type options struct {
 	instrumentationOptions prowflagutil.InstrumentationOptions
 	jira                   prowflagutil.JiraOptions
 
-	webhookSecretFile string
-	slackTokenFile    string
+	webhookSecretFile   string
+	slackTokenFile      string
+	rocketChatTokenFile string
 }
 
 func (o *options) Validate() error {
@@ -199,6 +201,16 @@ func main() {
 	if slackClient == nil {
 		logrus.Info("Using fake slack client.")
 		slackClient = slack.NewFakeClient()
+	}
+
+	var rocketChatClient *rocketchat.Client
+	if !o.dryRun && string(secret.GetSecret(o.rocketChatTokenFile)) != "" {
+		logrus.Info("Using real rocketchat client.")
+		rocketChatClient = rocketchat.NewClient(secret.GetTokenGenerator(o.rocketChatTokenFile))
+	}
+	if rocketChatClient == nil {
+		logrus.Info("Using fake rocketchat client.")
+		rocketChatClient = rocketchat.NewFakeClient()
 	}
 
 	mdYAMLEnabled := func(org, repo string) bool {

@@ -71,7 +71,7 @@ type Client struct {
 }
 
 const (
-	chatPostMessage = "https://slack.com/api/chat.postMessage"
+	chatPostMessage = "https://chat.ske.eu01.stackit.cloud/api/v1/chat.postMessage"
 
 	botName      = "prow"
 	botIconEmoji = ":prow:"

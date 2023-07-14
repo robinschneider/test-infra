@@ -28,7 +28,7 @@ import (
 
 	prowapi "k8s.io/test-infra/prow/apis/prowjobs/v1"
 	"k8s.io/test-infra/prow/config"
-	rocketchatclient "k8s.io/test-infra/prow/slack"
+	rocketchatclient "k8s.io/test-infra/prow/rocketchat"
 )
 
 const (
