@@ -77,7 +77,7 @@ func (rr *rocketChatReporter) report(log *logrus.Entry, pj *prowapi.ProwJob) err
 		jobRocketChatConfig = jobRocketChatConfig.ApplyDefault(&globalRocketChatConfig.RocketChatReporterConfig)
 	}
 	if jobRocketChatConfig == nil {
-		return errors.New("resolved slack config is empty") // Shouldn't happen at all, just in case
+		return errors.New("resolved rocketchat config is empty") // Shouldn't happen at all, just in case
 	}
 	host, channel := hostAndChannel(jobRocketChatConfig)
 
@@ -100,8 +100,8 @@ func (rr *rocketChatReporter) report(log *logrus.Entry, pj *prowapi.ProwJob) err
 		return nil
 	}
 	if err := client.WriteMessage(b.String(), channel); err != nil {
-		log.WithError(err).Error("failed to write Slack message")
-		return fmt.Errorf("failed to write Slack message: %w", err)
+		log.WithError(err).Error("failed to write RocketChat message")
+		return fmt.Errorf("failed to write RocketChat message: %w", err)
 	}
 	return nil
 }
@@ -137,7 +137,7 @@ func (rr *rocketChatReporter) ShouldReport(_ context.Context, logger *logrus.Ent
 	var stateShouldReport bool
 	if merged := jobRocketChatConfig.ApplyDefault(&globalRocketChatConfig.RocketChatReporterConfig); merged != nil && merged.JobStatesToReport != nil {
 		if merged.Report != nil && !*merged.Report {
-			logger.WithField("job_states_to_report", merged.JobStatesToReport).Debug("Skip slack reporting as 'report: false', could result from 'job_states_to_report: []'.")
+			logger.WithField("job_states_to_report", merged.JobStatesToReport).Debug("Skip rocketchat reporting as 'report: false', could result from 'job_states_to_report: []'.")
 			return false
 		}
 		for _, stateToReport := range merged.JobStatesToReport {
