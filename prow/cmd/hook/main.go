@@ -219,7 +219,7 @@ func main() {
 	var rocketChatClient *rocketchat.Client
 	if !o.dryRun && string(secret.GetSecret(o.rocketChatWebhookFile)) != "" {
 		logrus.Info("Using real rocketchat client.")
-		rocketChatClient = rocketchat.NewClient(secret.GetTokenGenerator(o.rocketChatWebhookFile), o.rocketChatChannel)
+		rocketChatClient = rocketchat.NewClient(secret.GetTokenGenerator(o.rocketChatWebhookFile))
 	}
 	if rocketChatClient == nil {
 		logrus.Info("Using fake rocketchat client.")
