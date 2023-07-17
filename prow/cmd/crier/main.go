@@ -78,7 +78,7 @@ type options struct {
 }
 
 func (o *options) validate() error {
-	if o.gerritWorkers+o.pubsubWorkers+o.githubWorkers+o.slackWorkers+o.blobStorageWorkers+o.k8sBlobStorageWorkers <= 0 {
+	if o.gerritWorkers+o.pubsubWorkers+o.githubWorkers+o.slackWorkers+o.blobStorageWorkers+o.k8sBlobStorageWorkers+o.rocketChatWorkers <= 0 {
 		return errors.New("crier need to have at least one report worker to start")
 	}
 
