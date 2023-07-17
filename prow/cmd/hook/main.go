@@ -103,7 +103,7 @@ func gatherOptions(fs *flag.FlagSet, args ...string) options {
 	fs.StringVar(&o.webhookSecretFile, "hmac-secret-file", "/etc/webhook/hmac", "Path to the file containing the GitHub HMAC secret.")
 	fs.StringVar(&o.slackTokenFile, "slack-token-file", "", "Path to the file containing the Slack token to use.")
 	fs.StringVar(&o.rocketChatWebhookFile, "rocketchat-webhook-file", "", "Path to the file containing the RocketChat webhook url to use.")
-	fs.StringVar(&o.rocketChatChannel, "rocketchat-channel", "", "Channel to send message to.")
+	fs.StringVar(&o.rocketChatChannel, "rocketchat-channel", "", "Channel to send message to.") // TODO: robin: Remove
 	fs.Parse(args)
 	return o
 }

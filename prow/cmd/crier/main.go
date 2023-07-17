@@ -63,7 +63,7 @@ type options struct {
 	k8sBlobStorageWorkers int
 
 	slackTokenFile                 string
-	rocketChatTokenFile            string
+	rocketChatWebhookFile          string
 	additionalSlackTokenFiles      slackclient.HostsFlag
 	additionalRocketChatTokenFiles rocketchatclient.HostsFlag
 
@@ -104,6 +104,12 @@ func (o *options) validate() error {
 		}
 	}
 
+	if o.rocketChatWorkers > 0 {
+		if o.rocketChatWebhookFile == "" {
+			return errors.New("--rocketchat-webhook-file must be set")
+		}
+	}
+
 	for _, opt := range []interface{ Validate(bool) error }{&o.client, &o.githubEnablement, &o.config} {
 		if err := opt.Validate(o.dryrun); err != nil {
 			return err
@@ -119,11 +125,13 @@ func (o *options) parseArgs(fs *flag.FlagSet, args []string) error {
 	fs.IntVar(&o.pubsubWorkers, "pubsub-workers", 0, "Number of pubsub report workers (0 means disabled)")
 	fs.IntVar(&o.githubWorkers, "github-workers", 0, "Number of github report workers (0 means disabled)")
 	fs.IntVar(&o.slackWorkers, "slack-workers", 0, "Number of Slack report workers (0 means disabled)")
+	fs.IntVar(&o.rocketChatWorkers, "rocketchat-workers", 0, "Number of RocketChat report workers (0 means disabled)")
 	fs.Var(&o.additionalSlackTokenFiles, "additional-slack-token-files", "Map of additional slack token files. example: --additional-slack-token-files=foo=/etc/foo-slack-tokens/token, repeat flag for each host")
 	fs.IntVar(&o.blobStorageWorkers, "blob-storage-workers", 0, "Number of blob storage report workers (0 means disabled)")
 	fs.IntVar(&o.k8sBlobStorageWorkers, "kubernetes-blob-storage-workers", 0, "Number of Kubernetes-specific blob storage report workers (0 means disabled)")
 	fs.Float64Var(&o.k8sReportFraction, "kubernetes-report-fraction", 1.0, "Approximate portion of jobs to report pod information for, if kubernetes-blob-storage-workers are enabled (0 - > none, 1.0 -> all)")
 	fs.StringVar(&o.slackTokenFile, "slack-token-file", "", "Path to a Slack token file")
+	fs.StringVar(&o.rocketChatWebhookFile, "rocketchat-webhook-file", "", "Path to a RocketChat webhook file")
 	fs.StringVar(&o.reportAgent, "report-agent", "", "Only report specified agent - empty means report to all agents (effective for github and Slack only)")
 
 	// TODO(krzyzacy): implement dryrun for gerrit/pubsub
@@ -221,9 +229,9 @@ func main() {
 			return cfg().RocketChatReporterConfigs.GetRocketChatReporter(refs)
 		}
 		tokensMap := make(map[string]func() []byte)
-		if o.rocketChatTokenFile != "" {
-			tokensMap[rocketchatreporter.DefaultHostName] = secret.GetTokenGenerator(o.rocketChatTokenFile)
-			if err := secret.Add(o.rocketChatTokenFile); err != nil {
+		if o.rocketChatWebhookFile != "" {
+			tokensMap[rocketchatreporter.DefaultHostName] = secret.GetTokenGenerator(o.rocketChatWebhookFile)
+			if err := secret.Add(o.rocketChatWebhookFile); err != nil {
 				logrus.WithError(err).Fatal("could not read rocketchat token")
 			}
 		}
