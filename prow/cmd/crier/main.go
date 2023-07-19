@@ -62,10 +62,10 @@ type options struct {
 	blobStorageWorkers    int
 	k8sBlobStorageWorkers int
 
-	slackTokenFile                 string
-	rocketChatWebhookFile          string
-	additionalSlackTokenFiles      slackclient.HostsFlag
-	additionalRocketChatTokenFiles rocketchatclient.HostsFlag
+	slackTokenFile                   string
+	rocketChatWebhookFile            string
+	additionalSlackTokenFiles        slackclient.HostsFlag
+	additionalRocketChatWebhookFiles rocketchatclient.HostsFlag
 
 	storage prowflagutil.StorageClientOptions
 
@@ -105,8 +105,8 @@ func (o *options) validate() error {
 	}
 
 	if o.rocketChatWorkers > 0 {
-		if o.rocketChatWebhookFile == "" {
-			return errors.New("--rocketchat-webhook-file must be set")
+		if o.rocketChatWebhookFile == "" && len(o.additionalRocketChatWebhookFiles) == 0 {
+			return errors.New("one of --rocketchat-webhook-file or --additional-rocketchat-token-files must be set")
 		}
 	}
 
@@ -132,6 +132,7 @@ func (o *options) parseArgs(fs *flag.FlagSet, args []string) error {
 	fs.Float64Var(&o.k8sReportFraction, "kubernetes-report-fraction", 1.0, "Approximate portion of jobs to report pod information for, if kubernetes-blob-storage-workers are enabled (0 - > none, 1.0 -> all)")
 	fs.StringVar(&o.slackTokenFile, "slack-token-file", "", "Path to a Slack token file")
 	fs.StringVar(&o.rocketChatWebhookFile, "rocketchat-webhook-file", "", "Path to a RocketChat webhook file")
+	fs.Var(&o.additionalRocketChatWebhookFiles, "additional-rocketchat-webhook-files", "Map of additional RocketChat webhook files. example: --additional-rocketchat-webhook-files=foo=/etc/foo-rocketchat-tokens/token, repeat flag for each host")
 	fs.StringVar(&o.reportAgent, "report-agent", "", "Only report specified agent - empty means report to all agents (effective for github and Slack only)")
 
 	// TODO(krzyzacy): implement dryrun for gerrit/pubsub
@@ -236,7 +237,7 @@ func main() {
 			}
 		}
 		hasReporter = true
-		for host, additionalTokenFile := range o.additionalRocketChatTokenFiles {
+		for host, additionalTokenFile := range o.additionalRocketChatWebhookFiles {
 			tokensMap[host] = secret.GetTokenGenerator(additionalTokenFile)
 			if err := secret.Add(additionalTokenFile); err != nil {
 				logrus.WithError(err).Fatal("could not read rocketchat token")
