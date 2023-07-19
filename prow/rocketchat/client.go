@@ -27,7 +27,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// HostsFlag is the flag type for slack hosts while initializing slack client
+// HostsFlag is the flag type for rocketchat hosts while initializing rocketchat client
 type HostsFlag map[string]string
 
 func (h *HostsFlag) String() string {
@@ -60,7 +60,7 @@ type Logger interface {
 	Debugf(s string, v ...interface{})
 }
 
-// Client allows you to provide connection to Slack API Server
+// Client allows you to provide connection to RocketChat API Server
 // It contains a token that allows to authenticate connection to post and work with channels in the domain
 type Client struct {
 	// If logger is non-nil, log all method calls with it.
