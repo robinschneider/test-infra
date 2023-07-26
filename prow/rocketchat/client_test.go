@@ -21,16 +21,18 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
+	"k8s.io/test-infra/prow/clientutil"
 )
 
 func TestHostsFlag(t *testing.T) {
-	var testArg HostsFlag
+	var testArg clientutil.HostsFlag
 	flags := flag.NewFlagSet("foo", flag.PanicOnError)
 	flags.Var(&testArg, "test-arg", "")
 	if err := flags.Parse([]string{"--test-arg", "a=b"}); err != nil {
 		t.Fatal(err)
 	}
-	if diff := cmp.Diff(HostsFlag(map[string]string{"a": "b"}), testArg); diff != "" {
+	if diff := cmp.Diff(clientutil.HostsFlag(map[string]string{"a": "b"}), testArg); diff != "" {
 		t.Fatalf("Arg parsing mismatch. Want(-), got(+):\n%s", diff)
 	}
 }
